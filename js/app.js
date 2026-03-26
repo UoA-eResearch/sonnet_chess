@@ -223,6 +223,7 @@ class ChessApp {
     this.selectedSquare = null;
     this.validMoves = [];
     this.renderer.clearHighlights();
+    this.renderer.clearLastMove();
 
     this._updateInfoPanel();
     this._clearMoveLog();
@@ -241,6 +242,7 @@ class ChessApp {
       this.renderer.initPieces(this.engine.board);
       this.renderer.setBoardRef(this.engine.board);
       this.renderer.clearHighlights();
+      this.renderer.clearLastMove();
     }
     this.selectedSquare = null;
     this.validMoves = [];
@@ -345,6 +347,7 @@ class ChessApp {
     }
 
     this.renderer.movePiece(fr, fc, tr, tc);
+    this.renderer.showLastMove(fr, fc, tr, tc);
     this.renderer.clearHighlights();
     this.selectedSquare = null;
     this.validMoves = [];
@@ -387,6 +390,7 @@ class ChessApp {
     }
 
     this.renderer.movePiece(fr, fc, tr, tc);
+    this.renderer.showLastMove(fr, fc, tr, tc);
     this.renderer.clearHighlights();
     this.selectedSquare = null;
     this.validMoves = [];
@@ -484,6 +488,8 @@ class ChessApp {
     } else {
       document.getElementById('your-color').textContent = '';
     }
+
+    this._updateScoreBar();
   }
 
   _highlightKingInCheck() {
@@ -564,6 +570,45 @@ class ChessApp {
     // Convert "#rrggbb" to 0xRRGGBB
     const hex = cssColor.replace('#', '');
     return parseInt(hex, 16);
+  }
+
+  // Calculate material balance (positive = white ahead)
+  _computeScore() {
+    const values = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 };
+    let white = 0, black = 0;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const p = this.engine.board[r][c];
+        if (p) {
+          if (p.color === 'white') white += values[p.type];
+          else black += values[p.type];
+        }
+      }
+    }
+    return white - black;
+  }
+
+  // Update the evaluation bar with current material score
+  _updateScoreBar() {
+    const fill = document.getElementById('eval-fill');
+    const label = document.getElementById('eval-label');
+    if (!fill || !label) return;
+
+    const score = this._computeScore();
+    // Clamp to ±10 for display range
+    const clamped = Math.max(-10, Math.min(10, score));
+    // White fills from bottom: neutral=50%, white +10=100%, black +10=0%
+    const whitePct = 50 + (clamped / 10) * 50;
+    fill.style.height = whitePct + '%';
+
+    if (score !== 0) {
+      label.textContent = (score > 0 ? '+' : '') + score;
+      // Position label near the dividing line
+      const borderPct = 100 - whitePct;
+      label.style.top = borderPct + '%';
+    } else {
+      label.textContent = '';
+    }
   }
 }
 

@@ -16,6 +16,8 @@
   --border:     rgba(255,255,255,0.08);
   --radius:     10px;
   --shadow:     0 8px 32px rgba(0,0,0,0.5);
+  --eval-white: #f0d9b5; /* matches board light square colour */
+  --eval-black: #1c1c2a;
 }
 
 html, body {
@@ -228,6 +230,39 @@ html, body {
 
 .btn-start:hover { opacity: 0.9; transform: translateY(-1px); }
 .btn-start:active { transform: translateY(0); }
+
+/* ─── Evaluation Bar ───────────────────────────────────────────────────── */
+#eval-bar {
+  width: 14px;
+  background: var(--eval-black);
+  border-right: 1px solid var(--border);
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+#eval-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: var(--eval-white);
+  transition: height 0.4s ease;
+  border-radius: 0 0 2px 2px;
+}
+
+#eval-label {
+  position: absolute;
+  left: 18px;
+  transform: translateY(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 0 4px rgba(0,0,0,0.8);
+}
 
 /* ─── Game Screen ──────────────────────────────────────────────────────── */
 #screen-game {
@@ -477,6 +512,8 @@ html, body {
 
 /* ─── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
+  #eval-bar { display: none; }
+
   .side-panel {
     width: 100%;
     min-width: 0;

@@ -27,6 +27,9 @@ class ChessRenderer3D {
     this.pieceMeshes = {};  // "r,c" -> THREE.Group
     this.squareMeshes = []; // [r][c] -> THREE.Mesh
     this.highlights = [];
+    this.lastMoveMeshes = []; // [Mesh] for from/to square highlight
+    this._lastMoveCoords = null; // {fr,fc,tr,tc}
+    this.animations = [];   // active piece move animations
     this.interactables = [];
     this.flipped = false;
 
@@ -194,6 +197,27 @@ class ChessRenderer3D {
 
   _animate() {
     requestAnimationFrame(() => this._animate());
+
+    // Process piece move animations
+    if (this.animations.length > 0) {
+      const now = performance.now();
+      this.animations = this.animations.filter(anim => {
+        const t = Math.min((now - anim.startTime) / anim.duration, 1);
+        // Ease in-out curve
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        anim.mesh.position.x = anim.startPos.x + (anim.endPos.x - anim.startPos.x) * ease;
+        anim.mesh.position.z = anim.startPos.z + (anim.endPos.z - anim.startPos.z) * ease;
+        // Arc: piece lifts up then comes back down
+        const arc = Math.sin(t * Math.PI) * 0.9;
+        anim.mesh.position.y = anim.startPos.y + (anim.endPos.y - anim.startPos.y) * ease + arc;
+        if (t >= 1) {
+          anim.mesh.position.set(anim.endPos.x, anim.endPos.y, anim.endPos.z);
+          return false;
+        }
+        return true;
+      });
+    }
+
     this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
@@ -208,6 +232,7 @@ class ChessRenderer3D {
 
   _onClick(event) {
     // Prevent clicks while animating pieces
+    if (this.animations.length > 0) return;
     const rect = this.container.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -288,12 +313,22 @@ class ChessRenderer3D {
 
     this.removePiece(tr, tc);
 
-    const pos = this._boardTo3D(tr, tc);
-    mesh.position.set(pos.x, 0.07, pos.z);
-    this._tagMesh(mesh, tr, tc);
+    const startPos = { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z };
+    const end3D = this._boardTo3D(tr, tc);
+    const endPos = { x: end3D.x, y: 0.07, z: end3D.z };
 
+    this._tagMesh(mesh, tr, tc);
     delete this.pieceMeshes[key];
     this.pieceMeshes[`${tr},${tc}`] = mesh;
+
+    // Animate the piece movement
+    this.animations.push({
+      mesh,
+      startPos,
+      endPos,
+      startTime: performance.now(),
+      duration: 280
+    });
   }
 
   // Handle castling rook move
@@ -351,6 +386,35 @@ class ChessRenderer3D {
   clearHighlights() {
     for (const h of this.highlights) this.scene.remove(h);
     this.highlights = [];
+  }
+
+  // Show gold highlight on the from/to squares of the last move
+  showLastMove(fr, fc, tr, tc) {
+    for (const h of this.lastMoveMeshes) this.scene.remove(h);
+    this.lastMoveMeshes = [];
+    this._lastMoveCoords = { fr, fc, tr, tc };
+
+    for (const [r, c] of [[fr, fc], [tr, tc]]) {
+      const geo = new THREE.PlaneGeometry(0.95, 0.95);
+      const mat = new THREE.MeshBasicMaterial({
+        color: this.highlightColor.lastMove,
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: false
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      const pos = this._boardTo3D(r, c);
+      mesh.position.set(pos.x, 0.08, pos.z);
+      this.scene.add(mesh);
+      this.lastMoveMeshes.push(mesh);
+    }
+  }
+
+  clearLastMove() {
+    for (const h of this.lastMoveMeshes) this.scene.remove(h);
+    this.lastMoveMeshes = [];
+    this._lastMoveCoords = null;
   }
 
   // Rebuild all pieces from board state
@@ -426,6 +490,36 @@ class ChessRenderer3D {
       this.scene.remove(h);
     }
     this.highlights = [];
+
+    // Reposition coordinate labels
+    this._updateLabels();
+
+    // Reposition last-move highlights
+    if (this._lastMoveCoords) {
+      const { fr, fc, tr, tc } = this._lastMoveCoords;
+      this.showLastMove(fr, fc, tr, tc);
+    }
+  }
+
+  // Update board coordinate label positions for current flip state
+  _updateLabels() {
+    if (!this._labelMeshes) return;
+    for (const item of this._labelMeshes) {
+      const i = item.index;
+      if (item.axis === 'file') {
+        if (this.flipped) {
+          item.mesh.position.set(3.5 - i, 0.001, -4.6);
+        } else {
+          item.mesh.position.set(i - 3.5, 0.001, 4.6);
+        }
+      } else { // rank
+        if (this.flipped) {
+          item.mesh.position.set(4.6, 0.001, 3.5 - i);
+        } else {
+          item.mesh.position.set(-4.6, 0.001, i - 3.5);
+        }
+      }
+    }
   }
 
   resetCamera(flipped) {
