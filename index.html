@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Chess</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════ SETUP SCREEN ═══════════════════════════ -->
+<div id="screen-setup">
+  <div class="setup-container">
+
+    <div class="game-title">
+      <h1>♟ 3D Chess</h1>
+      <p class="subtitle">Multiplayer · 3D · Customisable</p>
+    </div>
+
+    <!-- Game Mode -->
+    <div class="setup-card">
+      <h3>Game Mode</h3>
+      <div class="mode-buttons">
+        <button class="mode-btn active" id="btn-local">
+          <span class="icon">👥</span> Local Multiplayer
+        </button>
+        <button class="mode-btn" id="btn-create">
+          <span class="icon">📡</span> Online – Create
+        </button>
+        <button class="mode-btn" id="btn-join">
+          <span class="icon">🔗</span> Online – Join
+        </button>
+      </div>
+
+      <!-- Create game panel -->
+      <div id="panel-create" class="online-panel hidden">
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">
+          Click <strong>Start Game</strong> to create a room. Share the room code with your opponent.
+        </p>
+        <div id="room-code-area" class="room-code-area hidden">
+          <div id="room-code-display">—</div>
+          <button class="btn btn-sm" id="btn-copy-code">Copy</button>
+        </div>
+      </div>
+
+      <!-- Join game panel -->
+      <div id="panel-join" class="online-panel hidden">
+        <label for="join-code-input">Enter Room Code</label>
+        <input
+          id="join-code-input"
+          class="text-input"
+          type="text"
+          placeholder="Paste room code here…"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <!-- Piece Colours -->
+    <div class="setup-card">
+      <h3>Piece Colours</h3>
+      <div class="color-pickers">
+
+        <!-- White pieces -->
+        <div class="color-picker-group">
+          <label>White Pieces</label>
+          <div class="color-preview" id="preview-white"></div>
+          <div class="color-presets">
+            <div class="color-preset active"
+              style="background:#e8d5b7"
+              data-target="white" data-color="#e8d5b7"
+              title="Ivory"></div>
+            <div class="color-preset"
+              style="background:#ffffff"
+              data-target="white" data-color="#ffffff"
+              title="White"></div>
+            <div class="color-preset"
+              style="background:#d4af37"
+              data-target="white" data-color="#d4af37"
+              title="Gold"></div>
+            <div class="color-preset"
+              style="background:#b0bec5"
+              data-target="white" data-color="#b0bec5"
+              title="Silver"></div>
+            <div class="color-preset"
+              style="background:#ce93d8"
+              data-target="white" data-color="#ce93d8"
+              title="Lavender"></div>
+            <div class="color-preset"
+              style="background:#80cbc4"
+              data-target="white" data-color="#80cbc4"
+              title="Teal"></div>
+          </div>
+          <div class="color-custom">
+            <span>Custom:</span>
+            <input type="color" id="custom-white" value="#e8d5b7" />
+          </div>
+        </div>
+
+        <!-- Black pieces -->
+        <div class="color-picker-group">
+          <label>Black Pieces</label>
+          <div class="color-preview" id="preview-black"></div>
+          <div class="color-presets">
+            <div class="color-preset active"
+              style="background:#2c3e50"
+              data-target="black" data-color="#2c3e50"
+              title="Dark Blue"></div>
+            <div class="color-preset"
+              style="background:#1a1a1a"
+              data-target="black" data-color="#1a1a1a"
+              title="Black"></div>
+            <div class="color-preset"
+              style="background:#b71c1c"
+              data-target="black" data-color="#b71c1c"
+              title="Crimson"></div>
+            <div class="color-preset"
+              style="background:#1b5e20"
+              data-target="black" data-color="#1b5e20"
+              title="Forest"></div>
+            <div class="color-preset"
+              style="background:#4a148c"
+              data-target="black" data-color="#4a148c"
+              title="Purple"></div>
+            <div class="color-preset"
+              style="background:#e65100"
+              data-target="black" data-color="#e65100"
+              title="Orange"></div>
+          </div>
+          <div class="color-custom">
+            <span>Custom:</span>
+            <input type="color" id="custom-black" value="#2c3e50" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-start">▶  Start Game</button>
+
+  </div><!-- .setup-container -->
+</div><!-- #screen-setup -->
+
+
+<!-- ═══════════════════════════ GAME SCREEN ════════════════════════════ -->
+<div id="screen-game" class="hidden">
+
+  <!-- 3D Canvas -->
+  <div id="canvas-container"></div>
+
+  <!-- Side Panel -->
+  <aside class="side-panel">
+
+    <div class="panel-section">
+      <h3>Game Info</h3>
+      <div class="turn-indicator">
+        <div id="turn-dot"></div>
+        <span id="current-turn">White</span>
+        <span style="font-size:0.8rem;color:var(--text-muted);">'s turn</span>
+      </div>
+      <div id="game-status" class="status-badge status-playing">Playing</div>
+      <div id="your-color"></div>
+    </div>
+
+    <div class="move-log-section">
+      <h3>Move History</h3>
+      <div id="move-log"></div>
+    </div>
+
+    <div class="game-buttons">
+      <button class="btn btn-primary" id="btn-new-game">♻ New Game</button>
+      <button class="btn" id="btn-flip">🔄 Flip Board</button>
+    </div>
+
+  </aside>
+
+</div><!-- #screen-game -->
+
+
+<!-- ═══════════════════════════ PROMOTION DIALOG ══════════════════════ -->
+<div id="promotion-dialog" class="hidden">
+  <div class="promotion-box">
+    <h3>♛ Choose Promotion Piece</h3>
+    <div class="promo-buttons">
+      <button class="promo-btn" data-piece="queen">
+        ♛ <span>Queen</span>
+      </button>
+      <button class="promo-btn" data-piece="rook">
+        ♜ <span>Rook</span>
+      </button>
+      <button class="promo-btn" data-piece="bishop">
+        ♝ <span>Bishop</span>
+      </button>
+      <button class="promo-btn" data-piece="knight">
+        ♞ <span>Knight</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Status toast -->
+<div id="status-message"></div>
+
+
+<!-- ═════════════════════ SCRIPTS ════════════════════════════════════ -->
+<!-- Three.js core -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<!-- OrbitControls (attaches to THREE.OrbitControls) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<!-- PeerJS for online multiplayer -->
+<script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
+
+<!-- Game scripts -->
+<script src="js/chess-engine.js"></script>
+<script src="js/renderer3d.js"></script>
+<script src="js/multiplayer.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
