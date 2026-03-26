@@ -150,8 +150,8 @@ class ChessRenderer3D {
 
   _addLabels() {
     const files = 'abcdefgh';
-    const ranks = '87654321';
-    const labelMat = new THREE.MeshBasicMaterial({ color: 0xd4b483 });
+    // Row 0 visually = rank 8, row 7 = rank 1; labels descend as row index increases
+    const rankLabels = '87654321';
 
     for (let i = 0; i < 8; i++) {
       // File labels (a–h) along near edge
@@ -167,7 +167,7 @@ class ChessRenderer3D {
       this._labelMeshes.push({ mesh: fileMesh, index: i, axis: 'file' });
 
       // Rank labels (1–8) along left edge
-      const rankCanvas = this._makeTextCanvas(ranks[i], 48, '#d4b483');
+      const rankCanvas = this._makeTextCanvas(rankLabels[i], 48, '#d4b483');
       const rankTex = new THREE.CanvasTexture(rankCanvas);
       const rankGeo = new THREE.PlaneGeometry(0.45, 0.45);
       const rankMesh = new THREE.Mesh(rankGeo,
